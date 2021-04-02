@@ -14,6 +14,7 @@ if ( USE_SEQ )
 
     target_link_libraries(${ProjectId} ${PACK_LIB})
     target_link_libraries(${ProjectId} gtest gtest_main)
+	target_link_libraries(${ProjectId} ${OpenCV_LIBS})
 
     enable_testing()
     add_test(NAME ${ProjectId} COMMAND ${ProjectId})

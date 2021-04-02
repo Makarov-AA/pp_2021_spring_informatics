@@ -8,6 +8,8 @@ endif(WIN32)
 
 include( "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Configure.cmake" )
 
+
+
 ############################### GTest ###############################
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/gtest")
 include_directories("${CMAKE_SOURCE_DIR}/3rdparty/gtest/googletest/include")
@@ -16,6 +18,11 @@ if( WIN32 )
 else( WIN32 )
     include_directories("${CMAKE_SOURCE_DIR}/3rdparty/gtest-mpi/linux")
 endif( WIN32 )
+
+
+#OpenCV
+find_package(OpenCV REQUIRED)
+include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 ################################ MPI ################################
 option(USE_MPI OFF)
