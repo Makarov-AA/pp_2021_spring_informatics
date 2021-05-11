@@ -6,6 +6,10 @@
 #include <vector>
 #include <iostream>
 #include <random>
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/opencv.hpp>
 
 #include "./image_convex_hull.h"
 
@@ -327,6 +331,82 @@ TEST(Components, Test_700x700_worst) {
 
     ASSERT_EQ(convex_hulls_par, convex_hulls_seq);
     ASSERT_EQ(convex_hulls_par, expected_hulls);
+}
+
+TEST(Components, Test_My_Image) {
+    cv::Mat read_image = cv::imread("D:/Pictures/GrayWorld.jpg", cv::IMREAD_GRAYSCALE );
+	cv::imshow("Original", read_image);
+	int k = cv::waitKey(0);
+	cv::Mat binary_image(read_image.size(), read_image.type());
+	cv::threshold(read_image, binary_image, 100, 255, cv::THRESH_BINARY_INV);
+	cv::imshow("Binary", binary_image);
+	cv::waitKey(0);
+	int w = binary_image.size().width;
+	int h = binary_image.size().height;
+	std::vector<int> image(w * h);
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w; j++) {
+			image[i * w + j] = (binary_image.at<uchar>(i, j) == 0) ? 0 : 1;
+		}
+	}
+	cv::Mat marked_image(binary_image.size(), CV_8UC3);
+    std::vector<int> result = mark_components(image, w, h);
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w; j++) {
+			int mark = result[i * w + j];
+			cv::Vec3b color;
+			if (mark == 1) {
+				color[0] = 255;
+				color[1] = 255;
+				color[2] = 255;
+			} else {
+				color[0] = mark % 2 * 200;
+				color[1] = mark % 3 * 100;
+				color[2] = mark * 100 % 255;
+			}
+			marked_image.at<cv::Vec3b>(i, j) = color;
+		}
+	}
+	cv::imshow("Marks", marked_image);
+	cv::waitKey(0);
+    
+    std::vector<std::list <std::pair<int, int> > > convex_hulls_seq,
+                                                   convex_hulls_par;
+    clock_t start_time, end_time;
+    start_time = clock();
+    convex_hulls_seq = get_convex_hulls_seq(result, w, h);
+    end_time = clock();
+    double seq_time = (static_cast<double>(end_time - start_time)) /
+                                                                CLOCKS_PER_SEC;
+
+    start_time = clock();
+    convex_hulls_par = get_convex_hulls(result, w,
+                                                      h);
+    end_time = clock();
+    double par_time = (static_cast<double>(end_time - start_time)) /
+                                                                CLOCKS_PER_SEC;
+
+    std::cout << "Seq time: " << seq_time << " s" << std::endl;
+    std::cout << "Par time: " << par_time << " s" << std::endl;
+    
+	cv::Mat result_image(binary_image.size(), CV_8UC3);
+	cv::cvtColor(binary_image, result_image, cv::COLOR_GRAY2BGR);
+	for (auto convex_hull : convex_hulls_par) {
+		std::pair<int, int> first_point = convex_hull.front();
+		for (auto iter = ++convex_hull.begin(); iter != convex_hull.end(); iter++) {
+			std::pair<int, int> second_point = *iter;
+			cv::line(result_image, cv::Point(first_point.first, first_point.second),
+			         cv::Point(second_point.first, second_point.second),
+					 cv::Scalar(0, 255, 0));
+			first_point = second_point;
+		}
+		cv::line(result_image, cv::Point(convex_hull.front().first, convex_hull.front().second),
+			     cv::Point(convex_hull.back().first, convex_hull.back().second),
+			     cv::Scalar(0, 255, 0));
+	}
+	cv::imshow("Result", result_image);
+	cv::waitKey(0);
+    ASSERT_EQ(convex_hulls_par, convex_hulls_seq);
 }
 
 int main(int argc, char **argv) {
