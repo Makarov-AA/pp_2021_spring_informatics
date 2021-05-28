@@ -193,7 +193,7 @@ TEST(Components, Test_Diag_Cross) {
     ASSERT_EQ(convex_hulls, expected_hulls);
 }
 
-TEST(Components, Test_100x100_prim_image) {
+TEST(Components, Test_50x50_prim_image) {
     int h = 100, w = 100;
     int size = w * h;
     std::random_device rd;
@@ -243,59 +243,8 @@ TEST(Components, Test_100x100_prim_image) {
     ASSERT_EQ(convex_hulls_par, expected_hulls);
 }
 
-
-TEST(Components, Test_200x200_prim_image) {
-    int h = 200, w = 200;
-    int size = w * h;
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::vector<int> image(size * prm_size * prm_size);
-    std::vector<std::list <std::pair<int, int> > > expected_hulls(size);
-    for (int i = 0; i < h; i++)
-        for (int j = 0; j < w; j++) {
-            int prm_num = static_cast<int>(gen() % primitives.size());
-            expected_hulls[i * w + j] = primitives_convex_hulls[prm_num];
-            for (std::pair<int, int>& point : expected_hulls[i * w + j]) {
-                point.first += j * prm_size;
-                point.second += i * prm_size;
-            }
-            for (int k = 0; k < prm_size; k++)
-                for (int q = 0; q < prm_size; q++) {
-                    int idx = (i * w * prm_size + j) * prm_size +
-                           k * w * prm_size + q;
-                    image[idx] = primitives[prm_num][k * prm_size + q];
-                }
-        }
-    std::vector<int> marked_image = mark_components(image, w * prm_size,
-                                                           h * prm_size);
-    std::vector<std::list <std::pair<int, int> > > convex_hulls_seq,
-                                                   convex_hulls_par;
-
-    double start_time, end_time, seq_time, par_time;
-
-    start_time = omp_get_wtime();
-    convex_hulls_seq = get_convex_hulls_seq(marked_image, w * prm_size,
-                                                          h * prm_size);
-    end_time = omp_get_wtime();
-    seq_time = end_time - start_time;
-
-    int threads_num = omp_get_num_procs();
-    omp_set_num_threads(threads_num);
-    start_time = omp_get_wtime();
-    convex_hulls_par = get_convex_hulls(marked_image, w * prm_size,
-                                                      h * prm_size);
-    end_time = omp_get_wtime();
-    par_time = end_time - start_time;
-
-    std::cout << "Seq time: " << seq_time << " s" << std::endl;
-    std::cout << "Par time: " << par_time << " s" << std::endl;
-
-    ASSERT_EQ(convex_hulls_par, convex_hulls_seq);
-    ASSERT_EQ(convex_hulls_par, expected_hulls);
-}
-
-TEST(Components, Test_700x700_worst) {
-    int h = 700, w = 700;
+TEST(Components, Test_100x100_worst) {
+    int h = 100, w = 100;
     int size = w * h;
     std::vector<int> image(size, 0);
     std::vector<std::list <std::pair<int, int> > > expected_hulls(1);
