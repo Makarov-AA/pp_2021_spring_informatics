@@ -24,12 +24,20 @@ double Integral_4(const std::vector<double>& x) {
 
 TEST(Monte_carlo_integral_test, test_result_of_integral) {
     double a = 0.0, b = 1.0;
+    double t1, t2;
     int num_th = 4;
-    const int N = 2500000;
+    const int N = 250000;
     omp_set_num_threads(num_th);
 
+    t1 = omp_get_wtime();
     double res_seq = seqMonteCarlo(Integral_1, { a }, { b }, N * num_th);
+    t2 = omp_get_wtime();
+    std::cout << "Sequential time: " << t2 - t1 << std::endl;
+
+    t1 = omp_get_wtime();
     double res_omp = ompMonteCarlo(Integral_1, { a }, { b }, N);
+    t2 = omp_get_wtime();
+    std::cout << "OpenMP time: " << t2 - t1 << std::endl;
 
     ASSERT_NEAR(res_seq, res_omp, 0.5);
 }
@@ -37,12 +45,20 @@ TEST(Monte_carlo_integral_test, test_result_of_integral) {
 TEST(Monte_carlo_integral_test, test_result_of_integral_1) {
     std::vector<double> a = { 0.0, 2.5 };
     std::vector<double> b = { 1.534, 3.12 };
+    double t1, t2;
     int num_th = 4;
-    const int N = 2500000;
+    const int N = 250000;
     omp_set_num_threads(num_th);
 
+    t1 = omp_get_wtime();
     double res_seq = seqMonteCarlo(Integral_2, a, b, N * num_th);
+    t2 = omp_get_wtime();
+    std::cout << "Sequential time: " << t2 - t1 << std::endl;
+
+    t1 = omp_get_wtime();
     double res_omp = ompMonteCarlo(Integral_2, a, b, N);
+    t2 = omp_get_wtime();
+    std::cout << "OpenMP time: " << t2 - t1 << std::endl;
 
     ASSERT_NEAR(res_seq, res_omp, 0.5);
 }
@@ -50,12 +66,20 @@ TEST(Monte_carlo_integral_test, test_result_of_integral_1) {
 TEST(Monte_carlo_integral_test, test_result_of_integral_2) {
     std::vector<double> a = { 0.0, 2.5, 1.234 };
     std::vector<double> b = { 1.534, 3.12, 1.555 };
+    double t1, t2;
     int num_th = 4;
-    const int N = 2500000;
+    const int N = 250000;
     omp_set_num_threads(num_th);
 
+    t1 = omp_get_wtime();
     double res_seq = seqMonteCarlo(Integral_3, a, b, N * num_th);
+    t2 = omp_get_wtime();
+    std::cout << "Sequential time: " << t2 - t1 << std::endl;
+
+    t1 = omp_get_wtime();
     double res_omp = ompMonteCarlo(Integral_3, a, b, N);
+    t2 = omp_get_wtime();
+    std::cout << "OpenMP time: " << t2 - t1 << std::endl;
 
     ASSERT_NEAR(res_seq, res_omp, 0.5);
 }
@@ -63,12 +87,20 @@ TEST(Monte_carlo_integral_test, test_result_of_integral_2) {
 TEST(Monte_carlo_integral_test, test_result_of_integral_3) {
     std::vector<double>a = { 0.3, 1.32, 1.234 };
     std::vector<double>b = { 3.534, 3.5, 1.435 };
+    double t1, t2;
     int num_th = 4;
-    const int N = 2500000;
+    const int N = 250000;
     omp_set_num_threads(num_th);
 
+    t1 = omp_get_wtime();
     double res_seq = seqMonteCarlo(Integral_3, a, b, N * num_th);
+    t2 = omp_get_wtime();
+    std::cout << "Sequential time: " << t2 - t1 << std::endl;
+
+    t1 = omp_get_wtime();
     double res_omp = ompMonteCarlo(Integral_3, a, b, N);
+    t2 = omp_get_wtime();
+    std::cout << "OpenMP time: " << t2 - t1 << std::endl;
 
     ASSERT_NEAR(res_seq, res_omp, 0.5);
 }

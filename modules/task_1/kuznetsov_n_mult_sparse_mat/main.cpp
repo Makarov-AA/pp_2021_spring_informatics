@@ -27,6 +27,14 @@ TEST(SPARSE_MATRIX, NO_THROW_WHEN_TRANSPOSE) {
   ASSERT_NO_THROW(A.transpose());
 }
 
+TEST(SPARSE_MATRIX, CORRECT_MULT) {
+  sMatrix A({ 1, 1 }, { 0, 1, 1, 2 }, { 0, 2 }, 2, 3);
+  sMatrix B({ 7, 8, 9 }, { 0, 1, 2, 3 }, { 0, 1, 2 }, 3, 3);
+  sMatrix exp_result({ 7, 9 }, { 0, 1, 1, 2 }, { 0, 2 }, 2, 3);
+  sMatrix result = A * B;
+  ASSERT_TRUE(exp_result == result);
+}
+
 TEST(SPARSE_MATRIX, NO_THROW_WHEN_CREATE_RANDOM_MAT) {
   ASSERT_NO_THROW(sMatrix(1, 1, 475));
 }

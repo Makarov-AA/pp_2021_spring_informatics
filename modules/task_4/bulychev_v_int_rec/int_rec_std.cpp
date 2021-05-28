@@ -1,11 +1,6 @@
 // Copyright 2021 Bulychev Vladislav
-#include <tbb/tbb.h>
-#include <vector>
-#include <numeric>
-#include <utility>
-#include <cmath>
-#include <functional>
-#include "../../../modules/task_3/bulychev_v_int_rec/int_rec_tbb.h"
+#include "../../../modules/task_4/bulychev_v_int_rec/int_rec_std.h"
+#include "../../../3rdparty/unapproved/unapproved.h"
 
 double Calculation_Seq(std::vector<double> a, std::vector<double> b,
     int n, double(*f)(std::vector<double>)) {
@@ -40,13 +35,28 @@ double Calculation_Seq(std::vector<double> a, std::vector<double> b,
     return result;
 }
 
-double Calculation_Tbb(std::vector<double> a, std::vector<double> b,
+double Calculation_Std(std::vector<double> a, std::vector<double> b,
     int n, double(*f)(std::vector<double>)) {
+    int t_num = std::thread::hardware_concurrency();
+    std::vector<std::thread> t_v;
     int size_a = a.size();
     std::vector<double> h;
     double result = 0.0;
     std::vector <double> p(size_a);
     int num = pow(n, size_a);
+
+    int d = num / t_num;
+    int r = num % t_num;
+    std::vector<int> e(t_num);
+    int s = 0;
+
+    for (int j = 0; j < t_num; ++j) {
+        e[j] = d;
+        if (r != 0) {
+            r--;
+            e[j]++;
+        }
+    }
 
     for (int i = 0; i < size_a; i++) {
         double t1 = b[i] - a[i];
@@ -54,19 +64,24 @@ double Calculation_Tbb(std::vector<double> a, std::vector<double> b,
         h.push_back(t2);
     }
 
-    result = tbb::parallel_reduce(
-        tbb::blocked_range<int> {0, num}, 0.f,
-        [&](const tbb::blocked_range<int>& r, double l_result)->double {
-            int begin = r.begin();
-            int end = r.end();
-            for (int i = begin; i < end; i++) {
-                for (int j = 0; j < size_a; j++) {
-                    p[j] = (i % n) * h[j] + a[j] + h[j] * 0.5;
-                }
-                l_result += f(p);
+    auto calculation = [&](int s, int e) {
+        double l_result = 0;
+        for (int i = s; i < e; ++i) {
+            for (int j = 0; j < size_a; j++) {
+                p[j] = (i % n) * h[j] + a[j] + h[j] * 0.5;
             }
-            return l_result;
-        }, std::plus<double>());
+            l_result += f(p);
+        }
+        result += l_result;
+    };
+
+    for (int j = 0; j < t_num; ++j) {
+        int tmp = e[j];
+        int end1 = s + tmp;
+        t_v.emplace_back(std::thread(calculation, s, end1));
+        s += tmp;
+        t_v[j].join();
+    }
 
     int t4 = size_a;
     double t5 = 1;

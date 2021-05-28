@@ -1,11 +1,12 @@
 // Copyright 2021 Tashirev Ivan
-#include <omp.h>
+#include <tbb/tbb.h>
+#include <functional>
 #include <ctime>
 #include <random>
 #include <string>
 #include <algorithm>
 #include <vector>
-#include "../../../modules/task_2/tashirev_i_monte_carlo/monte_carlo.h"
+#include "../../../modules/task_3/tashirev_i_monte_carlo/tashirev_i_monte_carlo.h"
 
 double seqMonteCarlo(double(*f)(const std::vector<double>&),
                                 const std::vector<double>& a,
@@ -36,7 +37,7 @@ double seqMonteCarlo(double(*f)(const std::vector<double>&),
     return res;
 }
 
-double ompMonteCarlo(double(*f)(const std::vector<double>&),
+double tbbMonteCarlo(double(*f)(const std::vector<double>&),
                                 const std::vector<double>& a,
                                 const std::vector<double>& b, int steps) {
     if (steps <= 0)
@@ -46,25 +47,26 @@ double ompMonteCarlo(double(*f)(const std::vector<double>&),
     std::vector<std::uniform_real_distribution<double>> r(mult);
     for (int i = 0; i < mult; i++)
         r[i] = std::uniform_real_distribution<double>(a[i], b[i]);
-    int num_th;
-    #pragma omp parallel shared(r) reduction(+ : res)
-    {
-        num_th = omp_get_num_threads();
-        std::mt19937 gen;
-        gen.seed(static_cast<unsigned int>(time(0)));
-        std::vector<double> r1(mult);
-        for (int i = 0; i < steps; ++i) {
-            for (int j = 0; j < mult; ++j)
-                r1[j] = r[j](gen);
-            res += f(r1);
-        }
-    }
-    #pragma omp master
-    {
-        double S = 1;
-        for (int i = 0; i < mult; i++)
-            S *= (b[i] - a[i]);
-        res *= S / (num_th * steps);
-    }
+
+    res = tbb::parallel_reduce(
+                tbb::blocked_range<size_t>(0, steps), 0.0,
+                [&](tbb::blocked_range<size_t> range, double running_total) {
+                    std::mt19937 gen;
+                    gen.seed(static_cast<unsigned int>(time(0)));
+                    std::vector<double> r1(mult);
+                    for (size_t i = range.begin(); i != range.end(); ++i) {
+                        for (int j = 0; j < mult; ++j)
+                            r1[j] = r[j](gen);
+                        running_total += f(r1);
+                    }
+
+                    return running_total;
+                }, std::plus<double>() );
+
+    double S = 1;
+    for (int i = 0; i < mult; i++)
+        S *= (b[i] - a[i]);
+    res *= S / steps;
+
     return res;
 }
